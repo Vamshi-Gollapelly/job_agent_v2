@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.venv/
+venv/
+jobs.db
+jobs.db-*
+*.db
+resume.txt
+.pytest_cache/

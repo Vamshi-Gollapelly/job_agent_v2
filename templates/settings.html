@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Job Agent</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1a1a2e}
+.nav{background:#1a3a5c;color:#fff;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav-brand{font-size:17px;font-weight:700}
+.nav a{color:rgba(255,255,255,.8);text-decoration:none;font-size:13.5px}
+.nav a:hover{color:#fff}
+.container{max-width:760px;margin:0 auto;padding:24px 16px}
+.card{background:#fff;border-radius:12px;padding:22px 24px;margin-bottom:14px;border:1px solid #e2e8f0}
+h2{font-size:20px;font-weight:700;color:#1a3a5c;margin-bottom:4px}
+.subtitle{font-size:13px;color:#64748b;margin-bottom:20px}
+.field{margin-bottom:18px}
+label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px}
+.hint{font-size:12px;color:#94a3b8;margin-top:4px;line-height:1.5}
+input[type=text],input[type=number],textarea,select{width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13.5px;background:#fff;color:#1a1a2e;transition:border .15s}
+input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outline:none;border-color:#1a3a5c}
+textarea{resize:vertical;line-height:1.6}
+.keyword-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tag{font-size:12px;padding:4px 10px;border-radius:20px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;display:flex;align-items:center;gap:5px}
+.tag button{background:none;border:none;cursor:pointer;color:#93c5fd;font-size:14px;line-height:1;padding:0}
+.tag button:hover{color:#dc2626}
+.add-row{display:flex;gap:8px;margin-top:8px}
+.add-row input{flex:1}
+.btn{padding:9px 20px;border-radius:8px;border:none;cursor:pointer;font-size:13.5px;font-weight:600;transition:all .15s}
+.btn-primary{background:#1a3a5c;color:#fff}.btn-primary:hover{background:#0f2440}
+.btn-sm{padding:6px 14px;font-size:13px}
+.btn-outline{background:#fff;border:1px solid #cbd5e1;color:#475569}.btn-outline:hover{background:#f8fafc}
+.btn-success{background:#16a34a;color:#fff}.btn-success:hover{background:#15803d}
+.saved-msg{display:none;background:#dcfce7;color:#166534;padding:10px 14px;border-radius:8px;font-size:13px;margin-top:12px;border:1px solid #bbf7d0}
+.section-divider{border:none;border-top:1px solid #e2e8f0;margin:20px 0}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{font-size:13.5px;color:#374151}
+.toggle-desc{font-size:12px;color:#94a3b8;margin-top:2px}
+.toggle{position:relative;width:42px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:24px;transition:.3s}
+.slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+input:checked + .slider{background:#1a3a5c}
+input:checked + .slider:before{transform:translateX(18px)}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-brand">Job Agent</div>
+  <a href="/">← Back to dashboard</a>
+</nav>
+
+<div class="container">
+
+  <!-- Search keywords -->
+  <div class="card">
+    <h2>Search keywords</h2>
+    <p class="subtitle">The agent searches these terms across all job boards every day</p>
+
+    <div class="field">
+      <label>Active keywords</label>
+      <div class="keyword-tags" id="keyword-tags">
+        {% for kw in keywords %}
+        <span class="tag">
+          {{kw}}
+          <button type="button" onclick="removeKeyword(this, '{{kw}}')">×</button>
+        </span>
+        {% endfor %}
+      </div>
+      <div class="add-row">
+        <input type="text" id="new-keyword" placeholder="e.g. android developer intern" onkeydown="if(event.key==='Enter'){addKeyword();event.preventDefault()}">
+        <button class="btn btn-outline btn-sm" onclick="addKeyword()">Add</button>
+      </div>
+      <div class="hint">Press Enter or click Add to add a keyword. Click × to remove.</div>
+    </div>
+
+    <div class="field">
+      <label>Job type focus</label>
+      <select id="job-type-select">
+        <option value="internship" {{'selected' if job_type=='internship' else ''}}>Internships only</option>
+        <option value="graduate" {{'selected' if job_type=='graduate' else ''}}>Graduate roles only</option>
+        <option value="both" {{'selected' if job_type=='both' else ''}}>Both internships & graduate</option>
+        <option value="junior" {{'selected' if job_type=='junior' else ''}}>Junior / entry-level roles</option>
+      </select>
+      <div class="hint">This adjusts the search terms and job board filters automatically</div>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveKeywords()">Save keywords</button>
+    <div class="saved-msg" id="kw-saved">Keywords saved successfully!</div>
+  </div>
+
+  <!-- Locations -->
+  <div class="card">
+    <h2>Locations</h2>
+    <p class="subtitle">Where to search for jobs</p>
+
+    <div class="two-col">
+      <div class="field">
+        <label>Primary location</label>
+        <select id="primary-location">
+          <option value="Melbourne VIC" {{'selected' if primary_location=='Melbourne VIC' else ''}}>Melbourne, VIC</option>
+          <option value="Sydney NSW" {{'selected' if primary_location=='Sydney NSW' else ''}}>Sydney, NSW</option>
+          <option value="Brisbane QLD" {{'selected' if primary_location=='Brisbane QLD' else ''}}>Brisbane, QLD</option>
+          <option value="All Australia" {{'selected' if primary_location=='All Australia' else ''}}>All Australia</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Include remote jobs</label>
+        <select id="include-remote">
+          <option value="yes" {{'selected' if include_remote=='yes' else ''}}>Yes — include remote</option>
+          <option value="no" {{'selected' if include_remote=='no' else ''}}>No — local only</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveLocations()">Save locations</button>
+    <div class="saved-msg" id="loc-saved">Locations saved!</div>
+  </div>
+
+  <!-- AI settings -->
+  <div class="card">
+    <h2>AI analysis settings</h2>
+    <p class="subtitle">Control how the AI scores and filters jobs</p>
+
+    <div class="two-col">
+      <div class="field">
+        <label>Minimum fit score to show</label>
+        <input type="number" id="min-score" value="{{min_score}}" min="0" max="100">
+        <div class="hint">Jobs below this score are hidden from the dashboard</div>
+      </div>
+      <div class="field">
+        <label>Minimum score to generate documents</label>
+        <input type="number" id="min-doc-score" value="{{min_doc_score}}" min="0" max="100">
+        <div class="hint">Resume + cover letter only generated above this score (saves API costs)</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>AI model</label>
+      <select id="ai-model">
+        <option value="gpt-4o-mini" {{'selected' if ai_model=='gpt-4o-mini' else ''}}>GPT-4o Mini (fast, cheap — recommended)</option>
+        <option value="gpt-4o" {{'selected' if ai_model=='gpt-4o' else ''}}>GPT-4o (better quality, costs more)</option>
+      </select>
+      <div class="hint">GPT-4o Mini costs ~$0.001 per job. GPT-4o costs ~$0.01 per job.</div>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveAI()">Save AI settings</button>
+    <div class="saved-msg" id="ai-saved">AI settings saved!</div>
+  </div>
+
+  <!-- Job sources -->
+  <div class="card">
+    <h2>Job sources</h2>
+    <p class="subtitle">Choose which job boards to scrape</p>
+
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Seek.com.au</div>
+        <div class="toggle-desc">Australia's largest job board</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="src-seek" {{'checked' if sources.seek else ''}}>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Indeed Australia</div>
+        <div class="toggle-desc">Global job board with AU listings</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="src-indeed" {{'checked' if sources.indeed else ''}}>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">GradConnection</div>
+        <div class="toggle-desc">Best for internships and graduate roles in Australia</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="src-grad" {{'checked' if sources.gradconnection else ''}}>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div style="margin-top:16px">
+      <button class="btn btn-primary" onclick="saveSources()">Save sources</button>
+      <div class="saved-msg" id="src-saved">Sources saved!</div>
+    </div>
+  </div>
+
+  <!-- Danger zone -->
+  <div class="card">
+    <h2 style="color:#dc2626">Reset</h2>
+    <p class="subtitle">Clear all saved jobs and start fresh</p>
+    <button class="btn" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5" onclick="clearJobs()">Clear all jobs</button>
+    <div class="saved-msg" id="clear-saved" style="background:#fee2e2;color:#991b1b;border-color:#fca5a5">All jobs cleared. Run the scraper to fetch fresh results.</div>
+  </div>
+
+</div>
+
+<script>
+let keywords = {{ keywords | tojson }};
+
+function renderTags() {
+  const container = document.getElementById('keyword-tags');
+  container.innerHTML = keywords.map(kw => `
+    <span class="tag">${kw}
+      <button type="button" onclick="removeKeyword(this, '${kw}')">×</button>
+    </span>`).join('');
+}
+
+function addKeyword() {
+  const input = document.getElementById('new-keyword');
+  const val = input.value.trim().toLowerCase();
+  if (val && !keywords.includes(val)) {
+    keywords.push(val);
+    renderTags();
+    input.value = '';
+  }
+}
+
+function removeKeyword(btn, kw) {
+  keywords = keywords.filter(k => k !== kw);
+  renderTags();
+}
+
+function showSaved(id) {
+  const el = document.getElementById(id);
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+function saveKeywords() {
+  const jobType = document.getElementById('job-type-select').value;
+  fetch('/save_settings', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({keywords, job_type: jobType})
+  }).then(r => r.json()).then(() => showSaved('kw-saved'));
+}
+
+function saveLocations() {
+  const loc = document.getElementById('primary-location').value;
+  const remote = document.getElementById('include-remote').value;
+  fetch('/save_settings', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({primary_location: loc, include_remote: remote})
+  }).then(r => r.json()).then(() => showSaved('loc-saved'));
+}
+
+function saveAI() {
+  const minScore = document.getElementById('min-score').value;
+  const minDoc = document.getElementById('min-doc-score').value;
+  const model = document.getElementById('ai-model').value;
+  fetch('/save_settings', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({min_score: minScore, min_doc_score: minDoc, ai_model: model})
+  }).then(r => r.json()).then(() => showSaved('ai-saved'));
+}
+
+function saveSources() {
+  fetch('/save_settings', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      sources: {
+        seek: document.getElementById('src-seek').checked,
+        indeed: document.getElementById('src-indeed').checked,
+        gradconnection: document.getElementById('src-grad').checked
+      }
+    })
+  }).then(r => r.json()).then(() => showSaved('src-saved'));
+}
+
+function clearJobs() {
+  if (!confirm('Clear all saved jobs? This cannot be undone.')) return;
+  fetch('/clear_jobs', {method: 'POST'})
+    .then(r => r.json())
+    .then(() => showSaved('clear-saved'));
+}
+</script>
+</body>
+</html>

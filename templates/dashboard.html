@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Agent — Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1a1a2e}
+.nav{background:#1a3a5c;color:#fff;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav-brand{font-size:17px;font-weight:700;letter-spacing:-.3px}
+.nav-links a{color:rgba(255,255,255,.8);text-decoration:none;font-size:13.5px;margin-left:20px;padding:6px 0}
+.nav-links a:hover{color:#fff}
+.container{max-width:1080px;margin:0 auto;padding:24px 16px}
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
+.stat{background:#fff;border-radius:12px;padding:16px;text-align:center;border:1px solid #e2e8f0}
+.stat-n{font-size:26px;font-weight:700}
+.stat-l{font-size:11.5px;color:#64748b;margin-top:3px;text-transform:uppercase;letter-spacing:.03em}
+.n-blue{color:#1a3a5c}.n-green{color:#16a34a}.n-amber{color:#d97706}.n-purple{color:#7c3aed}.n-gray{color:#475569}
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.toolbar select,.toolbar input[type=number]{padding:7px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;background:#fff}
+.btn{padding:7px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s}
+.btn-primary{background:#1a3a5c;color:#fff}.btn-primary:hover{background:#0f2440}
+.btn-success{background:#16a34a;color:#fff}.btn-success:hover{background:#15803d}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-outline{background:#fff;border:1px solid #cbd5e1;color:#475569}.btn-outline:hover{background:#f8fafc}
+.job-count{font-size:13px;color:#64748b;margin-left:auto}
+.job-card{background:#fff;border-radius:12px;padding:16px 18px;margin-bottom:10px;border:1px solid #e2e8f0;display:flex;gap:14px;transition:box-shadow .2s;cursor:pointer}
+.job-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);border-color:#cbd5e1}
+.score-box{width:54px;height:54px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;flex-shrink:0}
+.s-high{background:#dcfce7;color:#166534}
+.s-mid{background:#fef9c3;color:#854d0e}
+.s-low{background:#fee2e2;color:#991b1b}
+.s-zero{background:#f1f5f9;color:#64748b}
+.job-body{flex:1;min-width:0}
+.job-title{font-size:15px;font-weight:600;color:#1a3a5c;text-decoration:none;display:block}
+.job-title:hover{text-decoration:underline}
+.job-meta{font-size:12.5px;color:#64748b;margin-top:4px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.src-badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.src-seek{background:#e0f2fe;color:#0369a1}
+.src-indeed{background:#fef3c7;color:#92400e}
+.src-grad{background:#ede9fe;color:#5b21b6}
+.status-chip{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.st-new{background:#f0fdf4;color:#166534}
+.st-applied{background:#eff6ff;color:#1d4ed8}
+.st-interview{background:#fdf4ff;color:#7e22ce}
+.st-offer{background:#dcfce7;color:#14532d}
+.st-rejected{background:#fef2f2;color:#991b1b}
+.job-reason{font-size:12.5px;color:#475569;margin-top:5px;line-height:1.55}
+.rec-apply{color:#16a34a;font-weight:600}
+.rec-consider{color:#d97706;font-weight:600}
+.rec-skip{color:#dc2626}
+.no-jobs{text-align:center;padding:80px 20px;color:#94a3b8}
+.no-jobs-icon{font-size:48px;margin-bottom:12px}
+.fab{position:fixed;bottom:24px;right:24px;background:#1a3a5c;color:#fff;border:none;padding:14px 22px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(26,58,92,.4);transition:all .2s}
+.fab:hover{background:#0f2440;transform:translateY(-2px)}
+.fab.loading{background:#475569;pointer-events:none}
+.toast{position:fixed;bottom:80px;right:24px;background:#1e293b;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-brand">Job Agent</div>
+  <div class="nav-links">
+    <a href="/">Dashboard</a>
+    <a href="/settings">Settings</a>
+    <a href="/?status=applied">Applied</a>
+    <a href="/?status=interview">Interviews</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="stats-row">
+    <div class="stat"><div class="stat-n n-blue">{{stats.total}}</div><div class="stat-l">Total found</div></div>
+    <div class="stat"><div class="stat-n n-green">{{stats.high_fit}}</div><div class="stat-l">High fit 70+</div></div>
+    <div class="stat"><div class="stat-n n-purple">{{stats.new}}</div><div class="stat-l">New today</div></div>
+    <div class="stat"><div class="stat-n n-amber">{{stats.applied}}</div><div class="stat-l">Applied</div></div>
+    <div class="stat"><div class="stat-n" style="color:#7c3aed">{{stats.interview}}</div><div class="stat-l">Interviews</div></div>
+  </div>
+
+  <form method="GET" class="toolbar">
+    <label style="font-size:13px;color:#475569">Min score</label>
+    <input type="number" name="min_score" value="{{min_score}}" min="0" max="100" style="width:65px">
+    <label style="font-size:13px;color:#475569">Source</label>
+    <select name="source">
+      <option value="">All sources</option>
+      <option value="Seek" {{'selected' if source=='Seek' else ''}}>Seek</option>
+      <option value="Indeed" {{'selected' if source=='Indeed' else ''}}>Indeed</option>
+      <option value="GradConnection" {{'selected' if source=='GradConnection' else ''}}>GradConnection</option>
+    </select>
+    <label style="font-size:13px;color:#475569">Status</label>
+    <select name="status">
+      <option value="">All</option>
+      <option value="new" {{'selected' if status_filter=='new' else ''}}>New</option>
+      <option value="applied" {{'selected' if status_filter=='applied' else ''}}>Applied</option>
+      <option value="interview" {{'selected' if status_filter=='interview' else ''}}>Interview</option>
+    </select>
+    <button type="submit" class="btn btn-primary">Filter</button>
+    <span class="job-count">{{jobs|length}} jobs</span>
+  </form>
+
+  {% if jobs %}
+    {% for job in jobs %}
+    <div class="job-card" onclick="window.location='/job/{{job.id}}'">
+      <div class="score-box {{'s-high' if job.fit_score >= 70 else 's-mid' if job.fit_score >= 50 else 's-low' if job.fit_score > 0 else 's-zero'}}">
+        {{job.fit_score if job.fit_score > 0 else '?'}}
+      </div>
+      <div class="job-body">
+        <a href="/job/{{job.id}}" class="job-title" onclick="event.stopPropagation()">{{job.title}}</a>
+        <div class="job-meta">
+          <span>{{job.company}}</span>
+          <span>{{job.location}}</span>
+          {% if job.salary %}<span>{{job.salary}}</span>{% endif %}
+          <span class="src-badge {{'src-seek' if job.source=='Seek' else 'src-indeed' if job.source=='Indeed' else 'src-grad'}}">{{job.source}}</span>
+          {% if job.status and job.status != 'new' %}
+          <span class="status-chip st-{{job.status}}">{{job.status}}</span>
+          {% endif %}
+          {% if job.recommendation %}
+          <span class="rec-{{job.recommendation}}">{{job.recommendation}}</span>
+          {% endif %}
+          <span style="color:#94a3b8">{{job.date_found}}</span>
+        </div>
+        {% if job.fit_reason %}
+        <div class="job-reason">{{job.fit_reason}}</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="no-jobs">
+      <div class="no-jobs-icon">🔍</div>
+      <p style="font-size:18px;font-weight:600;margin-bottom:8px">No jobs found yet</p>
+      <p style="font-size:14px">Click the button below to scrape all job boards</p>
+    </div>
+  {% endif %}
+</div>
+
+<button class="fab" id="run-btn" onclick="runScraper()">Run scraper now</button>
+<div class="toast" id="toast"></div>
+
+<script>
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function runScraper() {
+  const btn = document.getElementById('run-btn');
+  btn.textContent = 'Running...';
+  btn.classList.add('loading');
+  fetch('/run_now', {method: 'POST'})
+    .then(r => r.json())
+    .then(() => {
+      showToast('Scraper started! Refresh in 2-3 minutes.');
+      setTimeout(() => {
+        btn.textContent = 'Run scraper now';
+        btn.classList.remove('loading');
+      }, 15000);
+    })
+    .catch(() => {
+      btn.textContent = 'Run scraper now';
+      btn.classList.remove('loading');
+    });
+}
+</script>
+</body>
+</html>

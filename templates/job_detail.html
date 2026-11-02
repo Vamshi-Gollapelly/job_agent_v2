@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{job.title}} — Job Agent</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1a1a2e}
+.nav{background:#1a3a5c;color:#fff;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav-brand{font-size:17px;font-weight:700}
+.nav a{color:rgba(255,255,255,.8);text-decoration:none;font-size:13.5px}
+.nav a:hover{color:#fff}
+.container{max-width:900px;margin:0 auto;padding:24px 16px}
+.card{background:#fff;border-radius:12px;padding:22px 24px;margin-bottom:14px;border:1px solid #e2e8f0}
+.job-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.job-title-h{font-size:22px;font-weight:700;color:#1a3a5c;margin-bottom:8px}
+.job-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:#475569}
+.src-badge{font-size:11.5px;padding:3px 10px;border-radius:20px;font-weight:500}
+.src-seek{background:#e0f2fe;color:#0369a1}
+.src-indeed{background:#fef3c7;color:#92400e}
+.src-grad{background:#ede9fe;color:#5b21b6}
+.score-big{text-align:center;min-width:80px}
+.score-num{font-size:40px;font-weight:800}
+.score-high{color:#16a34a}.score-mid{color:#d97706}.score-low{color:#dc2626}
+.score-label{font-size:12px;color:#64748b;margin-top:2px}
+.fit-reason{font-size:14px;color:#374151;line-height:1.65;margin-top:12px;padding:12px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid #1a3a5c}
+.apply-btn{display:inline-flex;align-items:center;gap:6px;background:#1a3a5c;color:#fff;padding:11px 22px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;margin-top:14px;transition:background .15s}
+.apply-btn:hover{background:#0f2440}
+.section-title{font-size:15px;font-weight:700;color:#1a3a5c;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{font-size:12px;padding:4px 10px;border-radius:20px;font-weight:500}
+.chip-match{background:#dcfce7;color:#166534}
+.chip-missing{background:#fee2e2;color:#991b1b}
+.chip-req{background:#eff6ff;color:#1d4ed8}
+.desc-box{background:#f8fafc;border-radius:8px;padding:16px;font-size:13px;line-height:1.7;color:#374151;max-height:300px;overflow-y:auto;border:1px solid #e2e8f0;white-space:pre-wrap}
+.doc-box{background:#f8fafc;border-radius:8px;padding:16px;font-size:13px;line-height:1.75;color:#1a1a2e;white-space:pre-wrap;font-family:'Courier New',monospace;border:1px solid #e2e8f0;max-height:500px;overflow-y:auto}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn-copy{background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}.btn-copy:hover{background:#e2e8f0}
+.btn-copy.copied{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+.btn-primary{background:#1a3a5c;color:#fff}.btn-primary:hover{background:#0f2440}
+.status-form{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.status-form select,.status-form textarea{padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;background:#fff}
+.status-form textarea{flex:1;min-width:180px;resize:vertical}
+.no-docs{text-align:center;padding:30px;color:#94a3b8;font-size:14px}
+.tag-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-brand">Job Agent</div>
+  <a href="/">← Back to dashboard</a>
+</nav>
+
+<div class="container">
+{% if job %}
+
+  <!-- Job header -->
+  <div class="card">
+    <div class="job-header">
+      <div style="flex:1">
+        <h1 class="job-title-h">{{job.title}}</h1>
+        <div class="job-meta">
+          <span style="font-weight:500">{{job.company}}</span>
+          <span>{{job.location}}</span>
+          {% if job.salary %}<span style="color:#16a34a;font-weight:500">{{job.salary}}</span>{% endif %}
+          <span class="src-badge {{'src-seek' if job.source=='Seek' else 'src-indeed' if job.source=='Indeed' else 'src-grad'}}">{{job.source}}</span>
+          <span style="color:#94a3b8">Found {{job.date_found}}</span>
+        </div>
+        {% if job.fit_reason %}
+        <div class="fit-reason">{{job.fit_reason}}</div>
+        {% endif %}
+        <a href="{{job.url}}" target="_blank" rel="noopener" class="apply-btn">
+          View & Apply on {{job.source}} ↗
+        </a>
+      </div>
+      <div class="score-big">
+        <div class="score-num {{'score-high' if job.fit_score >= 70 else 'score-mid' if job.fit_score >= 50 else 'score-low'}}">
+          {{job.fit_score}}
+        </div>
+        <div class="score-label">Fit score</div>
+        {% if job.recommendation %}
+        <div style="margin-top:4px;font-size:12px;font-weight:600;color:{{'#16a34a' if job.recommendation=='apply' else '#d97706' if job.recommendation=='consider' else '#dc2626'}}">
+          {{job.recommendation.upper()}}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Skills breakdown -->
+  {% if job.matching_skills or job.missing_skills or job.key_requirements %}
+  <div class="card">
+    <div class="section-title">Skills analysis</div>
+    {% if job.key_requirements %}
+    <div style="margin-bottom:10px">
+      <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Key requirements</div>
+      <div class="chips">
+        {% for r in job.key_requirements.split(', ') %}
+        {% if r %}<span class="chip chip-req">{{r}}</span>{% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% if job.matching_skills %}
+    <div style="margin-bottom:10px">
+      <div style="font-size:12px;font-weight:600;color:#166534;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Your matching skills</div>
+      <div class="chips">
+        {% for s in job.matching_skills.split(', ') %}
+        {% if s %}<span class="chip chip-match">✓ {{s}}</span>{% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% if job.missing_skills %}
+    <div>
+      <div style="font-size:12px;font-weight:600;color:#991b1b;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Gaps to address</div>
+      <div class="chips">
+        {% for s in job.missing_skills.split(', ') %}
+        {% if s %}<span class="chip chip-missing">✗ {{s}}</span>{% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Job description -->
+  {% if job.description %}
+  <div class="card">
+    <div class="section-title">Job description</div>
+    <div class="desc-box">{{job.description}}</div>
+  </div>
+  {% endif %}
+
+  <!-- Tailored resume -->
+  {% if docs and docs.tailored_resume %}
+  <div class="card">
+    <div class="section-title">
+      Tailored resume
+      <button class="btn btn-copy" onclick="copyText('resume-text', this)">Copy resume</button>
+    </div>
+    <div class="doc-box" id="resume-text">{{docs.tailored_resume}}</div>
+  </div>
+  {% endif %}
+
+  <!-- Cover letter -->
+  {% if docs and docs.cover_letter %}
+  <div class="card">
+    <div class="section-title">
+      Cover letter
+      <button class="btn btn-copy" onclick="copyText('cover-text', this)">Copy cover letter</button>
+    </div>
+    <div class="doc-box" id="cover-text">{{docs.cover_letter}}</div>
+  </div>
+  {% endif %}
+
+  {% if not docs %}
+  <div class="card">
+    <div class="no-docs">
+      No documents generated yet.<br>
+      {% if job.fit_score < 50 %}
+      Fit score is below 50 — documents are only generated for jobs scoring 50+.
+      {% else %}
+      Documents will appear after the next scraper run.
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Status update -->
+  <div class="card">
+    <div class="section-title">Application status</div>
+    <form method="POST" action="/update_status" class="status-form">
+      <input type="hidden" name="job_id" value="{{job.id}}">
+      <select name="status">
+        <option value="new" {{'selected' if job.status=='new' else ''}}>New</option>
+        <option value="saved" {{'selected' if job.status=='saved' else ''}}>Saved</option>
+        <option value="applied" {{'selected' if job.status=='applied' else ''}}>Applied</option>
+        <option value="interview" {{'selected' if job.status=='interview' else ''}}>Interview</option>
+        <option value="offer" {{'selected' if job.status=='offer' else ''}}>Offer</option>
+        <option value="rejected" {{'selected' if job.status=='rejected' else ''}}>Rejected</option>
+      </select>
+      <textarea name="notes" rows="2" placeholder="Add notes (interview date, contact name, etc.)">{{job.notes or ''}}</textarea>
+      <button type="submit" class="btn btn-primary">Save status</button>
+    </form>
+  </div>
+
+{% else %}
+<div class="card"><p>Job not found.</p></div>
+{% endif %}
+</div>
+
+<script>
+function copyText(elementId, btn) {
+  const text = document.getElementById(elementId).innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.classList.remove('copied');
+    }, 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = btn.textContent.includes('resume') ? 'Copy resume' : 'Copy cover letter'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>

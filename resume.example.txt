@@ -1,0 +1,24 @@
+Your Name
+Graduate Software Engineer
+City, State | you@example.com | 0400 000 000
+linkedin.com/in/your-profile | github.com/your-username
+
+SUMMARY
+Two or three lines on who you are and the roles you are targeting.
+
+SKILLS
+Languages: ...
+Frameworks: ...
+Databases: ...
+Tools: ...
+
+EXPERIENCE
+Role | Organisation | Month Year - Month Year
+- What you built or did, how, and the result.
+
+PROJECTS
+Project name | Tech stack
+- What it does and what you personally built.
+
+EDUCATION
+Degree | Institution | Year
